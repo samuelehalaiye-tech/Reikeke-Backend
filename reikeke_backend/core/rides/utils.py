@@ -17,16 +17,16 @@ def haversine(lat1, lon1, lat2, lon2):
 
 def find_nearest_active_drivers(pickup_lat, pickup_lng, max_results=3, max_distance_km=10):
     drivers=[]
-    qs= User.objects.filter(driverprofile_active_status=True, driver_location_isnull=False)
+    qs= User.objects.filter(driverprofile__active_status=True, driver_location__isnull=False)
 
     for d in qs:
         lat= d.driver_location.lat
-        lng=d.driver_loaction.lng
+        lng=d.driver_location.lng
         if lat is None or lng is None:
             continue
-        dist= haversine(pickup_lng,pickup_lng, lng, lat)
+        dist= haversine(pickup_lat, pickup_lng, lng, lat)
         if dist <= max_distance_km:
-            drivers.append((d,list))
+            drivers.append((d, dist))
     drivers.sort(key=lambda x:x[1])
     return [ d for d, _ in drivers[:max_results]]
 

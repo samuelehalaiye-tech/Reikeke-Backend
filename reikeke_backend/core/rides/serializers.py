@@ -1,6 +1,6 @@
 
 from rest_framework import serializers
-from .models import RideRequest, Offer, DriverLocation
+from .models import RideRequest, Offer
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -16,10 +16,6 @@ class OfferSerializer(serializers.ModelSerializer):
         model = Offer
         fields = ['id','ride','driver','driver_phone','status','created_at','expires_at']
 
-class DriverLocationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DriverLocation
-        fields = ['lat','lng','updated_at']
 class RideDetailSerializer(serializers.ModelSerializer):
     driver_phone = serializers.CharField(source='assigned_driver.phone_number', read_only=True)
     driver_location = serializers.SerializerMethodField()

@@ -45,6 +45,14 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
 ]
 
+# Add Channels and Daphne if installed (for WebSocket support)
+try:
+    import channels
+    INSTALLED_APPS.insert(0, 'daphne')
+    INSTALLED_APPS.append('channels')
+except ImportError:
+    pass
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -134,4 +142,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'accounts.User'
 
+# Channels configuration
+ASGI_APPLICATION = 'core.asgi.application'
 
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}

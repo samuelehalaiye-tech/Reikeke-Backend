@@ -48,12 +48,3 @@ class Offer(models.Model):
 
     def __str__(self):
         return f"Offer {self.id} ride {self.ride_id} -> driver {self.driver_id}"
-
-class DriverLocation(models.Model):
-    driver = models.OneToOneField(User, on_delete=models.CASCADE, related_name='driver_location')
-    lat = models.FloatField(null=True, blank=True)
-    lng = models.FloatField(null=True, blank=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"Location {self.driver} ({self.lat},{self.lng})"

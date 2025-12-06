@@ -1,9 +1,8 @@
-
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import RideRequest, Offer, DriverLocation
-from .serializers import RideRequestSerializer, OfferSerializer, DriverLocationSerializer,RideDetailSerializer
+from .models import RideRequest, Offer
+from .serializers import RideRequestSerializer, OfferSerializer, RideDetailSerializer
 from django.utils import timezone
 from datetime import timedelta
 from .utils import find_nearest_active_drivers, expire_offers_and_create_next
@@ -115,22 +114,6 @@ class RideCompleteView(APIView):
         ride.status = 'completed'
         ride.save()
         return Response({'detail':'completed'})
-
-class UpdateLocationView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-   
-        serializer = DriverLocationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        lat = serializer.validated_data['lat']
-        lng = serializer.validated_data['lng']
-        user = request.user
-        loc, created = DriverLocation.objects.get_or_create(driver=user)
-        loc.lat = lat
-        loc.lng = lng
-        loc.save()
-        return Response({'detail':'location_updated'})
 class RideDetailView(generics.RetrieveAPIView):
     serializer_class = RideDetailSerializer
     permission_classes = [IsAuthenticated]
