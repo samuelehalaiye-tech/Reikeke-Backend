@@ -38,3 +38,20 @@ class RideDetailSerializer(serializers.ModelSerializer):
                 'updated_at': loc.updated_at
             }
         return None
+
+
+class PassengerRideHistorySerializer(serializers.ModelSerializer):
+    driver_info = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = RideRequest
+        fields = ['id', 'status', 'pickup_lat', 'pickup_lng', 'dropoff_lat', 'dropoff_lng', 
+                  'created_at', 'started_at', 'completed_at', 'driver_info']
+    
+    def get_driver_info(self, obj):
+        if obj.assigned_driver:
+            return {
+                'phone': obj.assigned_driver.phone_number,
+                'id': obj.assigned_driver.id
+            }
+        return None

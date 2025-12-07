@@ -2,11 +2,13 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import RideRequest, Offer
-from .serializers import RideRequestSerializer, OfferSerializer, RideDetailSerializer
+from .serializers import RideRequestSerializer, OfferSerializer, RideDetailSerializer, PassengerRideHistorySerializer
 from django.utils import timezone
 from datetime import timedelta
 from .utils import find_nearest_active_drivers, expire_offers_and_create_next
 from rest_framework.permissions import IsAuthenticated
+from django.db.models import Count, Avg, Q, Sum
+from decimal import Decimal
 
 class CreateRideRequestView(generics.CreateAPIView):
     serializer_class = RideRequestSerializer
@@ -118,3 +120,112 @@ class RideDetailView(generics.RetrieveAPIView):
     serializer_class = RideDetailSerializer
     permission_classes = [IsAuthenticated]
     queryset = RideRequest.objects.all()
+
+
+class DriverStatsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        driver = request.user
+        completed_rides = RideRequest.objects.filter(assigned_driver=driver, status='completed')
+        
+        total_rides = completed_rides.count()
+        total_earnings = Decimal('0')
+        avg_rating = 0
+        acceptance_rate = 0
+        
+        if total_rides > 0:
+            # Calculate stats
+            total_earnings = Decimal('50.00') * total_rides  # Default $50 per ride
+            avg_rating = 4.5  # Placeholder - would come from Rating model
+        
+        total_offers = Offer.objects.filter(driver=driver).count()
+        accepted_offers = Offer.objects.filter(driver=driver, status='accepted').count()
+        if total_offers > 0:
+            acceptance_rate = (accepted_offers / total_offers) * 100
+        
+        return Response({
+            'total_rides': total_rides,
+            'total_earnings': float(total_earnings),
+            'avg_rating': avg_rating,
+            'acceptance_rate': round(acceptance_rate, 2),
+            'active_rides': RideRequest.objects.filter(assigned_driver=driver, status__in=['driver_accepted', 'passenger_confirmed', 'ongoing']).count(),
+        })
+
+
+class DriverHistoryView(generics.ListAPIView):
+    serializer_class = RideDetailSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return RideRequest.objects.filter(assigned_driver=self.request.user, status='completed').order_by('-completed_at')
+
+
+class DriverActiveRideView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        driver = request.user
+        active_ride = RideRequest.objects.filter(
+            assigned_driver=driver,
+            status__in=['driver_accepted', 'passenger_confirmed', 'ongoing']
+        ).first()
+        
+        if not active_ride:
+            return Response({'detail': 'No active ride'}, status=404)
+        
+        serializer = RideDetailSerializer(active_ride)
+        return Response(serializer.data)
+
+
+class PassengerActiveRideView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        passenger = request.user
+        active_ride = RideRequest.objects.filter(
+            passenger=passenger,
+            status__in=['pending', 'driver_accepted', 'passenger_confirmed', 'ongoing']
+        ).first()
+        
+        if not active_ride:
+            return Response({'detail': 'No active ride'}, status=404)
+        
+        serializer = RideDetailSerializer(active_ride)
+        return Response(serializer.data)
+
+
+class PassengerRidesHistoryView(generics.ListAPIView):
+    serializer_class = PassengerRideHistorySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return RideRequest.objects.filter(
+            passenger=self.request.user,
+            status__in=['completed', 'cancelled']
+        ).order_by('-completed_at')
+
+
+class PassengerStatsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        passenger = request.user
+        completed_rides = RideRequest.objects.filter(passenger=passenger, status='completed')
+        
+        total_rides = completed_rides.count()
+        total_spent = Decimal('0')
+        
+        if total_rides > 0:
+            total_spent = Decimal('50.00') * total_rides  # Default $50 per ride
+        
+        active_ride = RideRequest.objects.filter(
+            passenger=passenger,
+            status__in=['pending', 'driver_accepted', 'passenger_confirmed', 'ongoing']
+        ).exists()
+        
+        return Response({
+            'total_rides': total_rides,
+            'total_spent': float(total_spent),
+            'has_active_ride': active_ride,
+        })

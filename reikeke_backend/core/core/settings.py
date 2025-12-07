@@ -25,7 +25,12 @@ SECRET_KEY = 'django-insecure-@t)u&geizd8id7dwh$tkilo&yc=h+jk)c17sd8tnrz6w+!)w0m
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["10.246.56.13", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "10.111.187.13",  # your device IP
+]
+
 
 
 
@@ -39,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'corsheaders',
     'accounts',
     'rides',
     'locations',
@@ -55,6 +61,7 @@ except ImportError:
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -152,4 +159,32 @@ CHANNEL_LAYERS = {
             "hosts": [('127.0.0.1', 6379)],
         },
     },
+}
+
+# CORS Configuration - Allow React Native app to communicate with backend
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:8081",
+    "http://localhost:19000",
+    "http://localhost:19001",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:8081",
+    "http://127.0.0.1:19000",
+    "http://127.0.0.1:19001",
+    "http://10.246.56.13:3000",
+    "http://10.246.56.13:8081",
+    "http://10.246.56.13:19000",
+    "http://10.246.56.13:19001",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+# REST Framework configuration
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ],
 }
