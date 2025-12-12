@@ -3,7 +3,7 @@
 from django.urls import path
 from .views import (
     CreateRideRequestView, OfferListView, OfferAcceptView, OfferRejectView,
-    RideConfirmView, RideStartView, RideCompleteView, RideDetailView,
+    RideConfirmView, RideStartView, RideCompleteView, RideDetailView, RideCancelView,
     DriverStatsView, DriverHistoryView, DriverActiveRideView,
     PassengerActiveRideView, PassengerRidesHistoryView, PassengerStatsView
 )
@@ -16,6 +16,7 @@ urlpatterns = [
     path('rides/<int:ride_id>/confirm/', RideConfirmView.as_view(), name='ride-confirm'),
     path('rides/<int:ride_id>/start/', RideStartView.as_view(), name='ride-start'),
     path('rides/<int:ride_id>/complete/', RideCompleteView.as_view(), name='ride-complete'),
+    path('rides/<int:ride_id>/cancel/', RideCancelView.as_view(), name='ride-cancel'),
     path('ride/<int:pk>/', RideDetailView.as_view(), name='ride-detail'),
     path('driver/stats/', DriverStatsView.as_view(), name='driver-stats'),
     path('driver/history/', DriverHistoryView.as_view(), name='driver-history'),

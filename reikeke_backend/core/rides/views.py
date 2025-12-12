@@ -206,6 +206,26 @@ class PassengerRidesHistoryView(generics.ListAPIView):
         ).order_by('-completed_at')
 
 
+class RideCancelView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, ride_id):
+        try:
+            ride = RideRequest.objects.get(pk=ride_id, passenger=request.user)
+        except RideRequest.DoesNotExist:
+            return Response({'detail': 'Ride not found'}, status=404)
+        
+        if ride.status not in ['pending', 'driver_accepted']:
+            return Response(
+                {'detail': 'Can only cancel pending or accepted rides'}, 
+                status=400
+            )
+        
+        ride.status = 'cancelled'
+        ride.save()
+        return Response({'detail': 'Ride cancelled'}, status=200)
+
+
 class PassengerStatsView(APIView):
     permission_classes = [IsAuthenticated]
 

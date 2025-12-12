@@ -2,11 +2,21 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+import re
 
 class UserManager(BaseUserManager):
     def create_user(self, phone_number, password=None, **extra_fields):
         if not phone_number:
             raise ValueError("Phone number is required")
+        # Normalize phone numbers to local format (0XXXXXXXXXX)
+        digits = re.sub(r"\D", "", str(phone_number))
+        if digits.startswith("234") and len(digits) >= 12:
+            phone_number = "0" + digits[-10:]
+        elif len(digits) == 10:
+            phone_number = "0" + digits
+        else:
+            phone_number = digits
+
         user = self.model(phone_number=phone_number, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -52,5 +62,7 @@ class PassengerProfile(models.Model):
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
-    if created and not instance.is_staff:
-        PassengerProfile.objects.create(user=instance)
+    # Profile creation is handled explicitly in registration serializers/views.
+    # Removing automatic PassengerProfile creation to avoid creating both
+    # passenger and driver profiles for the same user when registering drivers.
+    return

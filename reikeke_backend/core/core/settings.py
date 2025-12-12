@@ -25,11 +25,10 @@ SECRET_KEY = 'django-insecure-@t)u&geizd8id7dwh$tkilo&yc=h+jk)c17sd8tnrz6w+!)w0m
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-    "10.111.187.13",  # your device IP
-]
+# Allow all hosts during development (change in production!)
+ALLOWED_HOSTS = ["*", "10.147.252.13", "localhost", "127.0.0.1"]
+CSRF_TRUSTED_ORIGINS = ["http://10.147.252.13:8000", "http://10.147.252.13:8001", "http://localhost:8000", "http://localhost:8001", "http://127.0.0.1:8000", "http://127.0.0.1:8001"]
+
 
 
 
@@ -149,6 +148,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'accounts.User'
 
+# Custom authentication backend for phone_number USERNAME_FIELD
+AUTHENTICATION_BACKENDS = [
+    'accounts.backends.PhoneNumberBackend',
+]
+
 # Channels configuration
 ASGI_APPLICATION = 'core.asgi.application'
 
@@ -165,16 +169,32 @@ CHANNEL_LAYERS = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:8081",
+    "http://localhost:8082",  # Expo dev server
     "http://localhost:19000",
     "http://localhost:19001",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:8081",
+    "http://127.0.0.1:8082",  # Expo dev server
     "http://127.0.0.1:19000",
     "http://127.0.0.1:19001",
-    "http://10.246.56.13:3000",
-    "http://10.246.56.13:8081",
-    "http://10.246.56.13:19000",
-    "http://10.246.56.13:19001",
+    "http://10.111.187.13:3000",
+    "http://10.111.187.13:8081",
+    "http://10.111.187.13:8082",  # Expo dev server
+    "http://10.111.187.13:19000",
+    "http://10.111.187.13:19001",
+    "http://10.44.214.13:8000",  # Current dev machine
+    "http://10.44.214.13:19000",  # Expo dev server
+    "http://10.44.214.13:19001",
+    "http://10.147.252.13:8000",  # Current dev machine IP
+    "http://10.147.252.13:8081",  # Metro bundler
+    "http://10.147.252.13:8082",  # Expo dev server
+    "http://10.147.252.13:19000", # Expo dev server
+    "http://10.147.252.13:19001", # Expo dev server
+    "http://172.26.24.13:8000",  # Previous IP
+    "http://172.26.24.13:8081",
+    "http://172.26.24.13:8082",  # Expo dev server
+    "http://172.26.24.13:19000",
+    "http://172.26.24.13:19001",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -185,6 +205,28 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+        'rest_framework.permissions.AllowAny',
     ],
+}
+
+# Basic logging to console for debugging (show INFO from accounts app)
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'accounts': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
 }
